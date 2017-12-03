@@ -1,0 +1,76 @@
+<html>
+    <body>
+        <div style="width:40%; margin:auto;">
+            <table width=100%>
+                <tr>
+                    <td colspan=2><h2>{{group_shown}}:</h2></td>
+                    <td align="right">
+                        Pokaż grupę:
+                    </td>
+                    <td>
+                        <form action=# method="post">
+                            <select name="group" onchange="this.form.submit()">
+                                <option selected disabled>-- wybierz --</option>
+                                <option value="all_contacts">Wszystkie kontakty</option>
+                                {% for i in groups %}
+                                <option value="{{i.id}}">{{i.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="col" align="left" width=25%><font color="grey">Imię</th>
+                    <th scope="col" align="left" width=25%><font color="grey">Nazwisko</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                </tr>
+                
+                {% if all_contacts %}
+                    {% for person in all_contacts %}
+                    <tr align="middle">
+                        <td align="left"><p><a href="/show/{{person.id}}"><strong>{{person.name}}</strong></a></p></td>
+                        <td align="left">{{person.surname}}</td>
+                        <td><p><strong><a href="/mod/{{person.id}}"><font size="2">Edytuj</font></a></strong></p></td>
+                        <td><a href="/del/{{person.id}}"><font size="2">Usuń</font></a></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan=4 align="left">Brak kontaktów do wyświetlenia</td>
+                    </tr>  
+                {% endif %}
+                </tr>
+            </table>
+            <form method="POST" action=#>
+                <p><strong><font color="grey">Dodaj kontakt:</strong></font></p>
+                <label>Imię: <input type="text" name="name" style="width:100px"></label>
+                <label>Nazwisko: <input type="text" name="surname" style="width:100px"></label>
+                <label>Opis: <input type="text" name="desc"></label>
+                <button type="submit" name="submit" value="add_contact">Dodaj</button>
+            </form>
+        
+             <table width=100%>
+                <tr>
+                    <td colspan=3><h2>Grupy:</h2></td>
+                </tr>
+                    <th scope="col" align="left" width=25%><font color="grey">Nazwa grupy</th>
+                    <th scope="col" align="left" width=25%><font color="grey">Liczba członków</th>
+                    <th scope="col"></th>
+                </tr>
+                {% for i in groups %}
+                <tr>
+                    <td><a href="group/{{i.id}}">{{i.name}}</a></td>
+                    <td>{{i.member.count}}</td>
+                    <td><a href="delgroup/{{i.id}}">Usuń</a></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <form method="POST" action="/">
+                    <p><strong><font color="grey">Dodaj grupę:</strong></font></p>
+                    <label>Nazwa <input type="text" name="name" style="width:100px"></label>
+                    <button type="submit" name="submit" value="add_group">Dodaj</button>
+            </form
+        </div>
+    </body>
+</html>

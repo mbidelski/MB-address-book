@@ -22,6 +22,10 @@ urlpatterns = [
     url(r'^$', home),
     url(r'^del/(?P<contact_id>(\d)+)', del_contact),
     url(r'^mod/(?P<contact_id>(\d)+)', mod_contact),
+    url(r'^group/(?P<group_id>(\d)+)', group),
+    url(r'^delgroup/(?P<group_id>(\d)+)', del_group),
+    url(r'^delfromgroup/(?P<contact_id>(\d)+)/(?P<group_id>(\d)+)', del_from_group),
+
     url(r'^show/(?P<contact_id>(\d)+)', show_contact),
     url(r'^delmail/(?P<mail_id>(\d)+)', del_mail),
     url(r'^deladdress/(?P<address_id>(\d)+)', del_address),

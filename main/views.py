@@ -1,4 +1,4 @@
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from django.views import View
 from main.models import *
@@ -43,47 +43,40 @@ contact_html = """
 @csrf_exempt
 def home(request):
 
+    selected_group = None
+    group_shown = "Wszystkie kontakty"
+
     if request.method == "POST":
-        add_name = request.POST.get("name")
-        add_surname = request.POST.get("surname")
-        add_desc = request.POST.get("desc")
-        Person.objects.create(name=add_name, surname=add_surname, description=add_desc)
-        new_person = Person.objects.get(name=add_name, surname=add_surname, description=add_desc)
-        return redirect("/show/{}".format(new_person.id))
+        if request.POST.get("submit") == "add_contact":
+            add_name = request.POST.get("name")
+            add_surname = request.POST.get("surname")
+            add_desc = request.POST.get("desc")
+            Person.objects.create(name=add_name, surname=add_surname, description=add_desc)
+            new_person = Person.objects.get(name=add_name, surname=add_surname, description=add_desc)
+            return redirect("/show/{}".format(new_person.id))
 
-    response = HttpResponse()
-    all_contacts = Person.objects.order_by('surname')
-    contacts_list_html = """<table width=100%>
-    <tr>
-        <th scope="col" align="left" width=25%><font color="grey">Imię</th>
-        <th scope="col" width=25%><font color="grey">Nazwisko</th>
-        <th scope="col"></th>
-        <th scope="col"></th>
-    </tr>"""
+        elif request.POST.get("submit") == "add_group":
+            add_name = request.POST.get("name")
+            Group.objects.create(name=add_name)
 
-    for i in all_contacts:
+        elif request.POST.get("group"):
+            if request.POST.get("group") != "all_contacts":
+                group_id = int(request.POST.get("group"))
+                selected_group = Group.objects.get(pk=group_id)
+                group_shown = str(selected_group.name).title()
 
-        name = """<p><a href="/show/{}"><strong>{}</strong></a></p>""".format(i.id, i.name.title())
-        surname = """<p><strong>{}</strong></p>""".format(i.surname.title())
-        mod = """<a href="/mod/{}"><font size="2">Edytuj</font></a>""".format(i.id)
-        del_contact = """<a href="/del/{}"><font size="2">Usuń</font></a>""".format(i.id)
-        contacts_list_html = contacts_list_html + """<tr align="middle">
-        <td align="left">{}</td>
-        <td>{}</td>
-        <td>{}</td>
-        <td>{}</td></tr>""".format(name, surname, mod, del_contact)
+    if selected_group:
+        all_contacts = selected_group.member.all().order_by('surname', 'name')
+    else:
+        all_contacts = Person.objects.order_by('surname', 'name')
 
-    contacts_list_html = contacts_list_html + """</table>
-    <form method="POST" action=#>
-        <p><strong><font color="grey">Dodaj kontakt:</strong></font></p>
-        <label>Imię: <input type="text" name="name" style="width:100px"></label>
-        <label>Nazwisko: <input type="text" name="surname" style="width:100px"></label>
-        <label>Opis: <input type="text" name="desc"></label>
-        <button type="submit" name="submit" value="add">Dodaj</button>
-    </form>
-    """
-    response.write(container_html.format(contacts_list_html))
-    return response
+    groups = Group.objects.all().order_by('name')
+
+    return render(request, 'home.html', {
+        'group_shown': group_shown,
+        'all_contacts': all_contacts,
+        'groups': groups
+    })
 
 @csrf_exempt
 def mod_contact(request, contact_id):
@@ -142,9 +135,6 @@ def show_contact(request, contact_id):
         if request.POST.get("add") == "email":
             a_email = request.POST.get("email")
             a_label = request.POST.get("email_label")
-            # print(re.findall('^(\w+@\w+\.\w+)$', a_email))
-            # print(len(re.findall('^(\w+@\w+\.\w+)$', a_email)))
-            #
             if re.findall('^(\w+@\w+\.\w+)$', a_email):
                 Email.objects.create(label=a_label, email_address=a_email, email_owner=contact)
                 email_err_str = """
@@ -174,124 +164,19 @@ def show_contact(request, contact_id):
             <font color="green">Dodano adres<font>
             """
 
-    response = HttpResponse()
+    address = contact.address_set.all()
+    email = Email.objects.filter(email_owner=contact)
+    phone = Phone.objects.filter(phone_owner=contact)
 
-    if contact.description == None:
-        desc = "-"
-    else:
-        desc = contact.description
-
-    link_to_mod_html = """
-        <h4><a href="/mod/{}">Edytuj</a></h4>
-    """.format(contact.id)
-
-    contact_details_html = contact_html.format(link_to_mod_html, contact.name, contact.surname, desc)
-
-    if Address.objects.filter(resident=contact) is not None:
-        contact_details_html = contact_details_html + """
-        <tr>
-            <td colspan=4><h4>Adresy</h3></td>
-        </tr>
-        """
-
-        for i in Address.objects.filter(resident=contact):
-            if i.apt_no != "":
-                apt_no = "/ " + str(i.apt_no)
-            else:
-                apt_no = ""
-            contact_details_html = contact_details_html + """
-            <tr>
-                <td style="width:30%">{}</td>
-                <td style="width:30%">{} {}</td>
-                <td style="width:30%">{}</td>
-                <td align="right"><a href="/deladdress/{}">Usuń</a></td>
-            </tr>
-            """.format(i.street, i.street_no, apt_no, i.city, i.id)
-
-    contact_details_html = contact_details_html + """
-    <tr>
-    <form action=# method="POST">
-        <td><input type="text" name="street" placeholder="nazwa ulicy..."></td>
-        <td>nr: <input type="text" name="street_no" size="3"> m: 
-        <input type="text" name="apt_no" size="3"></td>
-        <td><input type="text" name="city" placeholder="miasto..."></td>
-        <td align="right"><button type="submit" name="add" value="address">Dodaj</button></a></td>
-    </form>
-    </tr>
-    <tr>
-    <td colspan=4>{}</td>
-    </tr>
-    """.format(address_err_str)
-
-    if Email.objects.filter(email_owner=contact) is not None:
-        contact_details_html = contact_details_html + """
-        <tr>
-            <td colspan=4><h4>Adresy email</h3></td>
-        </tr>
-        """
-
-        for i in Email.objects.filter(email_owner=contact):
-            if i.label is not None:
-                e_label = i.label
-            else:
-                e_label = ""
-            contact_details_html = contact_details_html + """
-            <tr>
-                <td style="width:30%">{}</td>
-                <td style="width:30%">{}</td>
-                <td align="right" colspan=2><a href="/delmail/{}">Usuń</a></td>
-            </tr>
-            """.format(i.email_address, e_label, i.id)
-
-    contact_details_html = contact_details_html + """
-    <tr>
-    <form action=# method="POST">
-        <td><input type="text" name="email" placeholder="adres email..."></td>
-        <td><input type="text" name="email_label" placeholder="etykieta adresu..."></td>
-        <td align="right" colspan=2><button type="submit" name="add" value="email">Dodaj</button></a></td>
-    </form>
-    </tr>
-    <tr>
-    <td colspan=4>{}</td>
-    </tr>
-    """.format(email_err_str)
-
-    if Phone.objects.filter(phone_owner=contact) is not None:
-        contact_details_html = contact_details_html + """
-        <tr>
-            <td colspan=4><h4>Telefony</h3></td>
-        </tr>
-        """
-
-        for i in Phone.objects.filter(phone_owner=contact):
-            if i.label is not None:
-                t_label = i.label
-            else:
-                t_label = ""
-            contact_details_html = contact_details_html + """
-            <tr>
-                <td style="width:30%">{}</td>
-                <td style="width:30%">{}</td>
-                <td align="right" colspan=2><a href="/delphone/{}">Usuń</a></td>
-            </tr>
-            """.format(i.phone_no, t_label, i.id)
-
-    contact_details_html = contact_details_html + """
-    <tr>
-    <form action=# method="POST">
-        <td><input type="number" name="phone_no" placeholder="nr tel XXXXXXXXX"></td>
-        <td><input type="text" name="phone_label" placeholder="etykieta numeru..."></td>
-        <td align="right" colspan=2><button type="submit" name="add" value="phone">Dodaj</button></a></td>
-    </form>
-    </tr>
-    <tr>
-    <td colspan=4>{}</td>
-    </tr>
-    """.format(phone_err_str)
-
-    contact_details_html = contact_details_html + "</table>"
-    response.write(container_html.format(contact_details_html))
-    return response
+    return render(request, 'contact.html', {
+        'contact': contact,
+        'address': address,
+        'email': email,
+        'phone': phone,
+        'address_err_str': address_err_str,
+        'email_err_str': email_err_str,
+        'phone_err_str': phone_err_str,
+    })
 
 def del_mail(request, mail_id):
     response = HttpResponse()
@@ -313,4 +198,42 @@ def del_phone(request, phone_id):
     return_id = phone.phone_owner.id
     phone.delete()
     return redirect("/show/{}".format(return_id))
+
+@csrf_exempt
+def group(request, group_id):
+
+    selected_group = Group.objects.get(pk=group_id)
+
+    if request.method == "POST":
+        person_id = int(request.POST.get("contact"))
+        person_to_group = Person.objects.get(pk=person_id)
+        selected_group.member.add(person_to_group)
+        selected_group.save()
+
+    all_contacts = Person.objects.all().order_by('surname', 'name')
+    group_contacts = selected_group.member.all().order_by('surname', 'name')
+    contacts = []
+    for i in all_contacts:
+        if i not in group_contacts:
+            contacts.append(i)
+
+    return render(request, 'group.html', {
+        'group': selected_group,
+        'contacts': contacts,
+        'group_contacts': group_contacts
+    })
+
+def del_group(request, group_id):
+    grouptodel = Group.objects.get(pk=group_id)
+    name = grouptodel.name
+    grouptodel.delete()
+    return HttpResponse("""Usunąłem grupę "{}" z książki adresowej <a href="/">Powrót</a>""".format(name))
+
+def del_from_group(request, contact_id, group_id):
+    response = HttpResponse()
+    person_to_del = Person.objects.get(pk=contact_id)
+    selected_group = Group.objects.get(pk=group_id)
+    selected_group.member.remove(person_to_del)
+    selected_group.save()
+    return redirect("/group/{}".format(group_id))
 

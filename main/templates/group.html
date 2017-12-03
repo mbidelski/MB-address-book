@@ -1,0 +1,48 @@
+<html>
+    <body>
+        <div style="width:40%; margin:auto;">
+            <table width=100%>
+                <tr>
+                    <td colspan=4><h2><a href="/"><< </a>{{group.name}}</h2></td>
+                </tr>
+                <tr>
+                    <form action=# method="post">
+                        <td colspan="4" style="white-space: nowrap">Dodaj do {{group.name}} kontakt:
+                            <select name="contact" >
+                                {% for i in contacts %}
+                                    <option value="{{i.id}}">{{i.surname}} {{i.name}}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="submit" value="Dodaj">
+                        </td>
+                    </form>
+                    </td>    
+                </tr>
+                
+                <tr>
+                    <th scope="col" align="left"><font color="grey">Imię</th>
+                    <th scope="col" align="left"><font color="grey">Nazwisko</th>
+                    <th scope="col">Opis</th>
+                    <th scope="col">Usuń z grupy</th>
+                </tr>
+                
+            {% if group_contacts %}
+                {% for person in group_contacts %}
+                <tr align="middle">
+                    <td align="left"><p><a href="/show/{{person.id}}"><strong>{{person.name}}</strong></a></p></td>
+                    <td align="left">{{person.surname}}</td>
+                    <td align="left">{{person.description}}</td>
+                    <td colspan="2"><a href="/delfromgroup/{{person.id}}/{{group.id}}"><font size="2">Usuń</font></a></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan=4 align="left">Brak kontaktów do wyświetlenia</td>
+                </tr>  
+                {% endif %}
+                </tr>
+            </table>
+        
+        </div>
+    </body>
+</html>

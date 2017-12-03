@@ -1,0 +1,127 @@
+<html>
+    <body>
+        <div style="width:40%; margin:auto;">
+<!--    nagłówek z danymi kontaktu-->
+            <table width=100%>
+                <tr>
+                    <td width=25%><h3><a href="/"><< </a>Dane kontaktu</h3></td>
+                    <td colspan=3 align="right"><h4><a href="/mod/{{contact.id}}">Edytuj</a></h4></td>
+                </tr>
+                <tr>
+                    <td><strong>Imię:</strong></td>
+                    <td colspan=3>{{contact.name}}</td>
+                </tr>
+                <tr>
+                    <td><strong>Nazwisko:</strong></td>
+                    <td colspan=3>{{contact.surname}}</td>
+                </tr>
+                <tr>
+                    <td><strong>Opis:</strong></td>
+                    <td colspan=3>{{contact.description}}</td>
+                </tr>
+                <tr style="height:10px"><td colspan=4></td></tr>
+            </table>
+<!--            lista adresów kontaktu-->
+            <table width=100%>
+                <tr>
+                    <td colspan=4><h4>Adresy</h3></td>
+                </tr>
+                {% if address %}
+                {% for i in address %}
+                <tr>
+                    <td style="width:30%">{{i.street}}</td>
+                    <td style="width:30%">{{i.street_no}} 
+                        {%if i.apt_no != ""%}
+                            /{{i.apt_no}}
+                        {%endif%}
+                    </td>
+                    <td style="width:30%">{{i.city}}</td>
+                    <td align="right"><a href="/deladdress/{{i.id}}">Usuń</a></td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr><td colspan=4>Brak adresów</td></tr>
+                {% endif %}
+                <tr>
+                    <form action=# method="POST">
+                        <td><input type="text" name="street" placeholder="nazwa ulicy..."></td>
+                        <td>nr: <input type="text" name="street_no" size="1"> m: 
+                        <input type="text" name="apt_no" size="1"></td>
+                        <td><input type="text" name="city" placeholder="miasto..."></td>
+                        <td align="right"><button type="submit" name="add" value="address">Dodaj</button></a></td>
+                    </form>
+                </tr>
+                <tr>
+                    <td colspan=4>
+                        {% autoescape off %}
+                        {{address_err_str}}
+                        {% endautoescape %}
+                    </td>
+                </tr>
+            </table>
+<!--adresy email kontaktu-->
+            <table>
+                <tr>
+                    <td colspan=4><h4>Adresy email</h3></td>
+                </tr>
+                {% if email %}
+                    {% for i in email %}
+                    <tr>
+                        <td style="width:30%">{{i.email_address}}</td>
+                        <td style="width:30%">{{i.label}}</td>
+                        <td align="right" colspan=2><a href="/delmail/{{i.id}}">Usuń</a></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan=4>Brak adresów email</td></tr>
+                {% endif %}
+                <tr>
+                    <form action=# method="POST">
+                        <td><input type="text" name="email" placeholder="adres email..."></td>
+                        <td><input type="text" name="email_label" placeholder="etykieta adresu..."></td>
+                        <td align="right" colspan=2><button type="submit" name="add" value="email">Dodaj</button></a></td>
+                    </form>
+                </tr>
+                <tr>
+                    <td colspan=4>
+                        {% autoescape off %}
+                        {{email_err_str}}
+                        {% endautoescape %}
+                    </td>
+                </tr>
+
+            </table>
+<!--numery telefonu kontaktu-->
+            <table>
+                <tr>
+                    <td colspan=4><h4>Adresy email</h3></td>
+                </tr>
+                {% if phone %}
+                    {% for i in phone %}
+                    <tr>
+                        <td style="width:30%">{{i.phone_no}}</td>
+                        <td style="width:30%">{{i.label}}</td>
+                        <td align="right" colspan=2><a href="/delmail/{{i.id}}">Usuń</a></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan=4>Brak nr telefonów</td></tr>
+                {% endif %}
+                <tr>
+                    <form action=# method="POST">
+                        <td><input type="number" name="phone_no" placeholder="nr tel XXXXXXXXX"></td>
+                        <td><input type="text" name="phone_label" placeholder="etykieta numeru..."></td>
+                        <td align="right" colspan=2><button type="submit" name="add" value="phone">Dodaj</button></a></td>
+                </form>
+                </tr>
+                <tr>
+                    <td colspan=4>
+                        {% autoescape off %}
+                        {{phone_err_str}}
+                        {% endautoescape %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </body>
+</html>
